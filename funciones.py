@@ -2,7 +2,11 @@ import ast
 import json
 import pandas as pd
 import numpy as np
+import pickle
 from collections import Counter
+
+with open('modelo_xgboost.pkl', 'rb') as file:
+    loaded_model = pickle.load(file)
 
 rows = []
 with open('steam_games.json', 'r') as f:
@@ -40,7 +44,11 @@ def juegos_por_año(year: str):
     data = df.loc[df['release_date'].str.contains(year) == True]
     data = data.dropna(subset=['app_name'])
     names_list = [i for i in data['app_name'] if i]
-    return {year: names_list}
+    names_list_distinct = []
+    for i in names_list:
+        if i not in names_list_distinct:
+            names_list_distinct.append(i)
+    return {year: sorted(names_list_distinct)}
 
 def specs_por_año(year: str):
     specs_list = []
@@ -79,3 +87,15 @@ def metascore_por_año(year: str):
     for idx, row in top_5.iterrows():
         result[row['app_name']] = row['metascore']
     return {year: result}
+
+def price_predictor(variables: str):
+    string_numbers = variables.split(", ")
+    integer_list = [int(number) for number in string_numbers]
+    if len(integer_list) == 13:
+        price_pred = loaded_model.predict(np.array(integer_list).reshape(1, -1))[0].round(2)
+        RMSE = '4.68'
+        return {'price prediction': str(price_pred), 'RMSE': RMSE}
+    elif len(integer_list) < 13:
+        return {'error': 'se insertaron variables de menos'}
+    elif len(integer_list) > 13:
+        return {'error': 'se insertaron variables demas'}

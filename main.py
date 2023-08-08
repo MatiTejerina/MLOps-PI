@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from funciones import get_top_5, generos_por_año, juegos_por_año, specs_por_año, earlyaccess_por_año, sentiment_por_año, metascore_por_año
+from funciones import get_top_5, generos_por_año, juegos_por_año, specs_por_año, earlyaccess_por_año, sentiment_por_año, metascore_por_año, price_predictor
 
 app = FastAPI()
 
@@ -47,6 +47,14 @@ def sentiment(year: str):
 def metascore(year: str):
     try:
         result = metascore_por_año(year)
+        return result
+    except Exception as e:
+        return {"error": str(e)}
+    
+@app.get("/prediction/{variables}")
+def predictor(variables: str):
+    try:
+        result = price_predictor(variables)
         return result
     except Exception as e:
         return {"error": str(e)}
